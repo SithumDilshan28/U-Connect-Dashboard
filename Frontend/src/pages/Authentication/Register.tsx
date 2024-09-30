@@ -65,6 +65,57 @@ const Register = () => {
     };
     const [flag, setFlag] = useState(themeConfig.locale);
 
+    const handleSuccess = async (credentialResponse) => {
+        try {
+            // Decode the JWT token to extract user information
+            const decoded = jwtDecode(credentialResponse.credential);
+
+            // Extract relevant user details
+            const { given_name, family_name, email, picture, email_verified } = decoded;
+
+            // Check if the email is verified
+            if (email_verified) {
+                // Send the user data to the backend
+                const response = await axios
+                    .post('http://localhost:8070/user/auth/google', {
+                        credential: credentialResponse.credential,
+                    })
+                    .then((response) => {
+                        localStorage.setItem('token', response.data.token);
+                        localStorage.setItem('isLogged', 'true');
+
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: response.data.message,
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
+                        navigate('/');
+                    })
+                    .catch((error) => {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'error',
+                            title: error.response?.data?.error || 'Login failed',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
+                    });
+            } else {
+                // If the email is not verified
+                Swal.fire('Login Failed', 'Your email is not verified.', 'error');
+            }
+        } catch (error) {
+            console.error('Error during Google login:', error);
+            Swal.fire('Error', 'Something went wrong during login. Please try again later.', 'error');
+        }
+    };
+
     const defaultAvatar = ''; // default avatar image URL
 
     const submitForm = async (values) => {
@@ -130,7 +181,7 @@ const Register = () => {
                         <div className="absolute inset-y-0 w-8 from-primary/10 via-transparent to-transparent ltr:-right-10 ltr:bg-gradient-to-r rtl:-left-10 rtl:bg-gradient-to-l xl:w-16 ltr:xl:-right-20 rtl:xl:-left-20"></div>
                         <div className="ltr:xl:-skew-x-[14deg] rtl:xl:skew-x-[14deg]">
                             <Link to="/" className="w-48 block lg:w-72 ms-10">
-                            <img src="/assets/images/auth/logo192.png" alt="Logo" className="w-full" />
+                                <img src="/assets/images/auth/logo192.png" alt="Logo" className="w-full" />
                             </Link>
                             <div className="mt-24 hidden w-full max-w-[430px] lg:block">
                                 <img src="/assets/images/auth/register.svg" alt="Cover Image" className="w-full" />
@@ -322,12 +373,9 @@ const Register = () => {
                                 <ul className="flex justify-center gap-3.5 text-white">
                                     <li>
                                         <GoogleLogin
-                                            onSuccess={(credentialResponse) => {
-                                                var credentialResponseDecoded = jwtDecode(credentialResponse.credential);
-                                                console.log(credentialResponseDecoded);
-                                            }}
+                                            onSuccess={handleSuccess}
                                             onError={() => {
-                                                console.log('Login Failed');
+                                                Swal.fire('Login Failed', 'Google Login was not successful.', 'error');
                                             }}
                                         />
                                     </li>

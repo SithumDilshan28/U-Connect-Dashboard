@@ -126,9 +126,52 @@ const deleteNote = async (req, res) => {
   }
 };
 
+const updateNoteDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, tag, date, isFav } = req.body;
+
+    // Validate request body data
+    if (!title || !description || !date) {
+      return res
+        .status(400)
+        .json({ message: "Title, description, and date are required." });
+    }
+
+    // Find the Note item by ID and ensure it belongs to the user
+    const note = await Note.findOne({ _id: id, userId: req.user.id });
+    if (!note) {
+      return res.status(404).json({ message: "Note not found." });
+    }
+
+    // Update the Note item with new data
+    note.title = title;
+    note.description = description;
+    note.tag = tag || note.tag;
+    note.date = date;
+    note.isFav = isFav !== undefined ? isFav : note.isFav;
+
+    // Save the updated Note item to the database
+    const updatedNote = await note.save();
+
+    // Respond with success message
+    res.status(200).json({
+      message: "Note successfully updated",
+      note: updatedNote,
+    });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({
+      message: "An error occurred while updating the Note",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   addNote,
   getAllNotes,
   updateNote,
   deleteNote,
+  updateNoteDetails,
 };

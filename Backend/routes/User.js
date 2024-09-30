@@ -5,7 +5,6 @@ const {
   getRole,
   registerUser,
   registerExpert,
-  getUser,
   login,
   getAllUsers,
   getAllExperts,
@@ -16,6 +15,8 @@ const {
   downProfileSummery,
   getCurrentUser,
   viewProfile,
+  deleteAccount,
+  googleLogin,
 } = require("../controllers/userController");
 
 // GET ROLE
@@ -26,9 +27,6 @@ router.post("/register", registerUser);
 
 //REGISTER EXPERT
 router.post("/registerExpert", registerExpert);
-
-// GET USER
-router.get("/get", protect, getUser);
 
 // GET CURRENT USER
 router.get("/getCurrentUser", protect, getCurrentUser);
@@ -43,7 +41,7 @@ router.get("/getAllUsers", protect, getAllUsers);
 router.get("/getAllExperts", protect, getAllExperts);
 
 // UPDATE USER DETAILS
-router.put("/updateUser/:id", updateUser);
+router.put("/updateUser", protect, updateUser);
 
 // UPDATE EXPERT DETAILS
 router.put("/updateExpert/:id", updateExpert);
@@ -51,8 +49,12 @@ router.put("/updateExpert/:id", updateExpert);
 // DELETE USER
 router.delete("/deleteUser/:id", deleteUser);
 
+router.delete("/deleteAccount", protect, deleteAccount);
+
 //LOGIN
 router.post("/login", login);
+
+router.post("/auth/google", googleLogin);
 
 //GET NEW TOKEN
 router.post("/token/:id", getNewToken);

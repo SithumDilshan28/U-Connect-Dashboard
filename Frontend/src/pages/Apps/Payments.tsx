@@ -3,26 +3,10 @@ import { Dialog, Transition } from '@headlessui/react';
 import Swal from 'sweetalert2';
 import { useDispatch, useSelector } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
-import IconUserPlus from '../../components/Icon/IconUserPlus';
 import IconSearch from '../../components/Icon/IconSearch';
 import IconUser from '../../components/Icon/IconUser';
-import IconX from '../../components/Icon/IconX';
 import axios from 'axios';
-import IconTrashLines from '../../components/Icon/IconTrashLines';
-import IconEdit from '../../components/Icon/IconEdit';
-import IconEye from '../../components/Icon/IconEye';
-import RegisterUser from '../Authentication/RegisterUser';
-import Flatpickr from 'react-flatpickr';
 import 'flatpickr/dist/flatpickr.css';
-import MaskedInput from 'react-text-mask';
-import IconMenuContacts from '../../components/Icon/Menu/IconMenuContacts';
-import IconMenuCalendar from '../../components/Icon/Menu/IconMenuCalendar';
-import IconMail from '../../components/Icon/IconMail';
-import IconPhoneCall from '../../components/Icon/IconPhoneCall';
-import IconPencil from '../../components/Icon/IconPencil';
-import IconLockDots from '../../components/Icon/IconLockDots';
-import IconMenuDocumentation from '../../components/Icon/Menu/IconMenuDocumentation';
-import RegisterExpert from '../Authentication/RegisterExpert';
 
 const Payments = () => {
     const dispatch = useDispatch();

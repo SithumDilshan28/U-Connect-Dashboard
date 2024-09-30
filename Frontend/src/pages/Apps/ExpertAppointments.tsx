@@ -255,15 +255,15 @@ const ExpertAppointments = () => {
                                         <tr key={request._id}>
                                             <td>
                                                 <div className="flex items-center w-max">
-                                                    {request.profilePicture && (
+                                                    {request.userId.profilePicture && (
                                                         <div className="w-max">
-                                                            <img src={request.profilePicture} className="h-8 w-8 rounded-full object-cover ltr:mr-2 rtl:ml-2" alt="avatar" />
+                                                            <img src={request.userId.profilePicture} className="h-8 w-8 rounded-full object-cover ltr:mr-2 rtl:ml-2" alt="avatar" />
                                                         </div>
                                                     )}
-                                                    {!request.profilePicture && request.name && (
+                                                    {!request.userId.profilePicture && request.name && (
                                                         <div className="grid place-content-center h-8 w-8 ltr:mr-2 rtl:ml-2 rounded-full bg-primary text-white text-sm font-semibold"></div>
                                                     )}
-                                                    {!request.profilePicture && !request.name && (
+                                                    {!request.userId.profilePicture && !request.name && (
                                                         <div className="border border-gray-300 dark:border-gray-800 rounded-full p-2 ltr:mr-2 rtl:ml-2">
                                                             <IconUser className="w-4.5 h-4.5" />
                                                         </div>
@@ -332,7 +332,7 @@ const ExpertAppointments = () => {
                                     <div className="text-lg font-medium bg-[#fbfbfb] dark:bg-[#121c2c] ltr:pl-5 rtl:pr-5 py-3 ltr:pr-[50px] rtl:pl-[50px]">Profile</div>
                                     <div className="mb-5">
                                         <div className="flex flex-col justify-center items-center">
-                                            <img src="/assets/images/profile-34.jpeg" alt="img" className="w-24 h-24 rounded-full object-cover  mb-5" />
+                                            <img src={params?.userId?.profilePicture ? params.userId.profilePicture : 'N/A'} alt="img" className="w-24 h-24 rounded-full object-cover  mb-5" />
                                             <p className="font-semibold text-primary text-xl">
                                                 {params?.userId?.firstName ? params.userId.firstName : 'N/A'} {params?.userId?.lastName ? params.userId.lastName : 'N/A'}
                                             </p>

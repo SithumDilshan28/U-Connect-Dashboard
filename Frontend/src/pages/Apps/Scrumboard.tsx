@@ -113,10 +113,49 @@ const Scrumboard = () => {
             return false;
         }
 
-        if (params.id) {
+        if (params._id) {
             //update project
-            const project = projectList.find((d: any) => d.id === params.id);
-            project.title = params.title;
+
+            try {
+                const response = await axios
+                    .put(
+                        `http://localhost:8070/goal/updateGoalDetails/${params._id}`,
+                        { title: params.title },
+                        {
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                            },
+                        }
+                    )
+                    .then((response) => {
+                        showMessage('Goal successfully updated!', 'success');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                        setIsAddProjectModal(false);
+                    })
+                    .catch((error) => {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'error',
+                            title: error.response?.data?.error || 'Error updating goal ',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
+                    });
+            } catch (error) {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: error.response?.data?.error || 'Error updating goal ',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                });
+            }
         } else {
             try {
                 const response = await axios
@@ -161,9 +200,26 @@ const Scrumboard = () => {
         }
     };
 
-    const deleteProject = (project: any) => {
-        setProjectList(projectList.filter((d: any) => d.id !== project.id));
-        showMessage('Project has been deleted successfully.');
+    const deleteProject = async (project: any) => {
+        try {
+            const response = await axios.delete(`http://localhost:8070/goal/deleteGoal/${project._id}`);
+
+            // Notify success
+            showMessage('Goal deleted successfully.');
+            setIsDeleteModal(false);
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } catch (error) {
+            console.error('Error deleting goal:', error);
+
+            // Notify failure
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred while trying to delete the goal.',
+            });
+        }
     };
 
     const clearProjects = (project: any) => {
@@ -201,13 +257,50 @@ const Scrumboard = () => {
             return false;
         }
 
-        const project: any = projectList.find((d: any) => d.id === paramsTask.projectId);
-        if (paramsTask.id) {
-            //update task
-            const task = project.tasks.find((d: any) => d.id === paramsTask.id);
-            task.title = paramsTask.title;
-            task.description = paramsTask.description;
-            task.tags = paramsTask.tags?.length > 0 ? paramsTask.tags.split(',') : [];
+        if (paramsTask._id) {
+            const taskData = {
+                title: paramsTask.title,
+                date: paramsTask.date,
+                description: paramsTask.description,
+                tags: paramsTask.tags?.length > 0 ? paramsTask.tags.split(',') : [],
+            };
+
+            try {
+                const response = await axios
+                    .put(`http://localhost:8070/goal/updateTaskInGoal/${paramsTask.projectId}/task/${paramsTask._id}`, taskData, {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    })
+                    .then((response) => {
+                        showMessage('Task Updated!', 'success');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                        setIsAddTaskModal(false);
+                    })
+                    .catch((error) => {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'error',
+                            title: error.response?.data?.error || 'Error updating task ',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
+                    });
+            } catch (error) {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: error.response?.data?.error || 'Error updating task ',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                });
+            }
         } else {
             const taskData = {
                 title: paramsTask.title,
@@ -335,80 +428,54 @@ const Scrumboard = () => {
                                                                 Delete
                                                             </button>
                                                         </li>
-                                                        <li>
-                                                            <button type="button" onClick={() => clearProjects(project)}>
-                                                                Clear All
-                                                            </button>
-                                                        </li>
                                                     </ul>
                                                 </Dropdown>
                                             </div>
                                         </div>
                                     </div>
-                                    <ReactSortable
-                                        list={project.tasks}
-                                        setList={(newState, sortable) => {
-                                            if (sortable) {
-                                                const groupId: any = sortable.el.closest('[data-group]')?.getAttribute('data-group') || 0;
-                                                const newList = projectList.map((task: any) => {
-                                                    if (parseInt(task._id) === parseInt(groupId)) {
-                                                        task.tasks = newState;
-                                                    }
 
-                                                    return task;
-                                                });
-                                                setProjectList(newList);
-                                            }
-                                        }}
-                                        animation={200}
-                                        group={{ name: 'shared', pull: true, put: true }}
-                                        ghostClass="sortable-ghost"
-                                        dragClass="sortable-drag"
-                                        className="connect-sorting-content min-h-[150px]"
-                                    >
-                                        {project.tasks.map((task: any) => {
-                                            return (
-                                                <div className="sortable-list " key={project.id + '' + task.id}>
-                                                    <div className="shadow bg-[#f4f4f4] dark:bg-white-dark/20 p-3 pb-5 rounded-md mb-5 space-y-3 cursor-move">
-                                                        {task.image ? <img src="/assets/images/carousel1.jpeg" alt="images" className="h-32 w-full object-cover rounded-md" /> : ''}
-                                                        <div className="text-lg font-semibold">{task.title}</div>
-                                                        <p className="break-all">{task.description}</p>
-                                                        <div className="flex gap-2 items-center flex-wrap">
-                                                            {task.tags?.length ? (
-                                                                task.tags.map((tag: any, i: any) => {
-                                                                    return (
-                                                                        <div key={i} className="btn px-2 py-1 flex btn-outline-primary">
-                                                                            <IconTag className="shrink-0" />
-                                                                            <span className="ltr:ml-2 rtl:mr-2">{tag}</span>
-                                                                        </div>
-                                                                    );
-                                                                })
-                                                            ) : (
-                                                                <div className="btn px-2 py-1 flex text-white-dark dark:border-white-dark/50 shadow-none">
-                                                                    <IconTag className="shrink-0" />
-                                                                    <span className="ltr:ml-2 rtl:mr-2">No Tags</span>
-                                                                </div>
-                                                            )}
+                                    {project.tasks.map((task: any) => {
+                                        return (
+                                            <div className="sortable-list " key={project.id + '' + task.id}>
+                                                <div className="shadow bg-[#f4f4f4] dark:bg-white-dark/20 p-3 pb-5 rounded-md mb-5 space-y-3 cursor-move">
+                                                    {task.image ? <img src="/assets/images/carousel1.jpeg" alt="images" className="h-32 w-full object-cover rounded-md" /> : ''}
+                                                    <div className="text-lg font-semibold">{task.title}</div>
+                                                    <p className="break-all">{task.description}</p>
+                                                    <div className="flex gap-2 items-center flex-wrap">
+                                                        {task.tags?.length ? (
+                                                            task.tags.map((tag: any, i: any) => {
+                                                                return (
+                                                                    <div key={i} className="btn px-2 py-1 flex btn-outline-primary">
+                                                                        <IconTag className="shrink-0" />
+                                                                        <span className="ltr:ml-2 rtl:mr-2">{tag}</span>
+                                                                    </div>
+                                                                );
+                                                            })
+                                                        ) : (
+                                                            <div className="btn px-2 py-1 flex text-white-dark dark:border-white-dark/50 shadow-none">
+                                                                <IconTag className="shrink-0" />
+                                                                <span className="ltr:ml-2 rtl:mr-2">No Tags</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="font-medium flex items-center hover:text-primary">
+                                                            <IconCalendar className="ltr:mr-3 rtl:ml-3 shrink-0" />
+                                                            <span>{new Date(task.date).toLocaleDateString()}</span>
                                                         </div>
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="font-medium flex items-center hover:text-primary">
-                                                                <IconCalendar className="ltr:mr-3 rtl:ml-3 shrink-0" />
-                                                                <span>{new Date(task.date).toLocaleDateString()}</span>
-                                                            </div>
-                                                            <div className="flex items-center">
-                                                                <button onClick={() => addEditTask(project._id, task)} type="button" className="hover:text-info">
-                                                                    <IconEdit className="ltr:mr-3 rtl:ml-3" />
-                                                                </button>
-                                                                <button onClick={() => deleteConfirmModal(project._id, task)} type="button" className="hover:text-danger">
-                                                                    <IconTrashLines />
-                                                                </button>
-                                                            </div>
+                                                        <div className="flex items-center">
+                                                            <button onClick={() => addEditTask(project._id, task)} type="button" className="hover:text-info">
+                                                                <IconEdit className="ltr:mr-3 rtl:ml-3" />
+                                                            </button>
+                                                            <button onClick={() => deleteConfirmModal(project._id, task)} type="button" className="hover:text-danger">
+                                                                <IconTrashLines />
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            );
-                                        })}
-                                    </ReactSortable>
+                                            </div>
+                                        );
+                                    })}
                                     <div className="pt-3">
                                         <button type="button" className="btn btn-primary mx-auto" onClick={() => addEditTask(project._id)}>
                                             <IconPlus />
@@ -446,7 +513,7 @@ const Scrumboard = () => {
                                     >
                                         <IconX />
                                     </button>
-                                    <div className="text-lg font-medium bg-[#fbfbfb] dark:bg-[#121c2c] ltr:pl-5 rtl:pr-5 py-3 ltr:pr-[50px] rtl:pl-[50px]">{params.id ? 'Edit Goal' : 'Add Goal'}</div>
+                                    <div className="text-lg font-medium bg-[#fbfbfb] dark:bg-[#121c2c] ltr:pl-5 rtl:pr-5 py-3 ltr:pr-[50px] rtl:pl-[50px]">{params._id ? 'Edit Goal' : 'Add Goal'}</div>
                                     <div className="p-5">
                                         <form onSubmit={saveProject}>
                                             <div className="grid gap-5">
@@ -461,7 +528,7 @@ const Scrumboard = () => {
                                                     Cancel
                                                 </button>
                                                 <button type="submit" className="btn btn-primary ltr:ml-4 rtl:mr-4">
-                                                    {params.id ? 'Update' : 'Add'}
+                                                    {params._id ? 'Update' : 'Add'}
                                                 </button>
                                             </div>
                                         </form>
@@ -484,7 +551,7 @@ const Scrumboard = () => {
                                 <button onClick={() => setIsAddTaskModal(false)} type="button" className="absolute top-4 ltr:right-4 rtl:left-4 text-white-dark hover:text-dark">
                                     <IconX />
                                 </button>
-                                <div className="text-lg font-medium bg-[#fbfbfb] dark:bg-[#121c2c] ltr:pl-5 rtl:pr-5 py-3 ltr:pr-[50px] rtl:pl-[50px]">{paramsTask.id ? 'Edit Task' : 'Add Task'}</div>
+                                <div className="text-lg font-medium bg-[#fbfbfb] dark:bg-[#121c2c] ltr:pl-5 rtl:pr-5 py-3 ltr:pr-[50px] rtl:pl-[50px]">{paramsTask._id ? 'Edit Task' : 'Add Task'}</div>
                                 <div className="p-5">
                                     <form onSubmit={saveTask}>
                                         <div className="grid gap-5">
@@ -526,7 +593,7 @@ const Scrumboard = () => {
                                                 Cancel
                                             </button>
                                             <button type="submit" className="btn btn-primary ltr:ml-4 rtl:mr-4">
-                                                {paramsTask.id ? 'Update' : 'Add'}
+                                                {paramsTask._id ? 'Update' : 'Add'}
                                             </button>
                                         </div>
                                     </form>

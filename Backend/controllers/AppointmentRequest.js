@@ -56,14 +56,27 @@ const getAllAppointments = async (req, res) => {
   try {
     const expertId = req.user.id;
 
-    // Find appointments for the expert
+    const validUsers = await User.find().select("_id").lean();
+    const validUserIds = validUsers.map((user) => user._id.toString());
+
     const appointments = await AppointmentRequest.find({
       expertId: expertId,
-    }).populate("userId", "profilePicture firstName lastName email");
+    }).lean();
 
-    res.status(200).json(appointments);
+    const filteredAppointments = appointments.filter((appointment) =>
+      validUserIds.includes(appointment.userId.toString())
+    );
+
+    const appointmentsWithUserData = await AppointmentRequest.find({
+      _id: { $in: filteredAppointments.map((a) => a._id) },
+    })
+      .populate("userId", "profilePicture firstName lastName email")
+      .lean();
+
+    res.status(200).json(appointmentsWithUserData);
   } catch (error) {
-    res.status(401).json({
+    console.error(error.message);
+    res.status(500).json({
       error: "Error fetching requests",
     });
   }

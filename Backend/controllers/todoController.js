@@ -131,9 +131,53 @@ const deleteTodo = async (req, res) => {
   }
 };
 
+const updateTodo = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, tag, priority, date, time } = req.body;
+
+    // Validate request body data
+    if (!title || !description || !date || !time) {
+      return res
+        .status(400)
+        .json({ message: "Title, description, date, and time are required." });
+    }
+
+    // Find the Todo item by ID and ensure it belongs to the user
+    const todo = await Todo.findOne({ _id: id, userId: req.user.id });
+    if (!todo) {
+      return res.status(404).json({ message: "To-Do item not found." });
+    }
+
+    // Update the Todo item with new data
+    todo.title = title;
+    todo.description = description;
+    todo.tag = tag || todo.tag;
+    todo.priority = priority || todo.priority;
+    todo.date = date;
+    todo.time = time;
+    todo.status = "";
+
+    // Save the updated Todo item to the database
+    const updatedTodo = await todo.save();
+
+    // Respond with success message
+    res.status(200).json({
+      message: "Task successfully updated",
+      todo: updatedTodo,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "An error occurred while updating the To-Do",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   addTodo,
   getAllTodo,
   updateTaskStatus,
   deleteTodo,
+  updateTodo,
 };

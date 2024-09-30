@@ -7,32 +7,19 @@ import AnimateHeight from 'react-animate-height';
 import { IRootState } from '../../store';
 import { useState, useEffect } from 'react';
 import IconCaretsDown from '../Icon/IconCaretsDown';
-import IconCaretDown from '../Icon/IconCaretDown';
 import IconMenuDashboard from '../Icon/Menu/IconMenuDashboard';
-import IconMinus from '../Icon/IconMinus';
-import IconMenuChat from '../Icon/Menu/IconMenuChat';
-import IconMenuMailbox from '../Icon/Menu/IconMenuMailbox';
 import IconMenuTodo from '../Icon/Menu/IconMenuTodo';
 import IconMenuNotes from '../Icon/Menu/IconMenuNotes';
 import IconMenuScrumboard from '../Icon/Menu/IconMenuScrumboard';
-import IconMenuContacts from '../Icon/Menu/IconMenuContacts';
 import IconMenuInvoice from '../Icon/Menu/IconMenuInvoice';
 import IconMenuCalendar from '../Icon/Menu/IconMenuCalendar';
-import IconMenuComponents from '../Icon/Menu/IconMenuComponents';
 import IconMenuElements from '../Icon/Menu/IconMenuElements';
-import IconMenuCharts from '../Icon/Menu/IconMenuCharts';
-import IconMenuWidgets from '../Icon/Menu/IconMenuWidgets';
-import IconMenuFontIcons from '../Icon/Menu/IconMenuFontIcons';
-import IconMenuDragAndDrop from '../Icon/Menu/IconMenuDragAndDrop';
-import IconMenuTables from '../Icon/Menu/IconMenuTables';
-import IconMenuDatatables from '../Icon/Menu/IconMenuDatatables';
 import IconMenuForms from '../Icon/Menu/IconMenuForms';
 import IconMenuUsers from '../Icon/Menu/IconMenuUsers';
-import IconMenuPages from '../Icon/Menu/IconMenuPages';
-import IconMenuAuthentication from '../Icon/Menu/IconMenuAuthentication';
 import IconStar from '../Icon/IconStar';
 import IconMenuDocumentation from '../Icon/Menu/IconMenuDocumentation';
 import axios from 'axios';
+import { Navigate } from 'react-router-dom';
 
 const Sidebar = () => {
     const [role, setRole] = useState(null);
@@ -118,14 +105,26 @@ const Sidebar = () => {
                         <ul className="relative font-semibold space-y-0.5 p-4 py-0 pt-3">
                             <li className="nav-item">
                                 <ul>
-                                    <li className="nav-item">
-                                        <NavLink to="/" className="group">
-                                            <div className="flex items-center">
-                                                <IconMenuDashboard className="group-hover:!text-primary shrink-0" />
-                                                <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('dashboard')}</span>
-                                            </div>
-                                        </NavLink>
-                                    </li>
+                                    {role === 'admin' && (
+                                        <li className="nav-item">
+                                            <NavLink to="/" className="group">
+                                                <div className="flex items-center">
+                                                    <IconMenuDashboard className="group-hover:!text-primary shrink-0" />
+                                                    <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('dashboard')}</span>
+                                                </div>
+                                            </NavLink>
+                                        </li>
+                                    )}
+                                    {role === 'expert' && (
+                                        <li className="nav-item">
+                                            <NavLink to="/" className="group">
+                                                <div className="flex items-center">
+                                                    <IconMenuDashboard className="group-hover:!text-primary shrink-0" />
+                                                    <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('dashboard')}</span>
+                                                </div>
+                                            </NavLink>
+                                        </li>
+                                    )}
                                     {role === 'admin' && (
                                         <li className="nav-item">
                                             <NavLink to="/apps/users" className="group">
@@ -219,7 +218,6 @@ const Sidebar = () => {
                                             </NavLink>
                                         </li>
                                     )}
-                                
                                     <li className="nav-item">
                                         <NavLink to="/apps/todolist" className="group">
                                             <div className="flex items-center">
@@ -256,14 +254,26 @@ const Sidebar = () => {
                                             </NavLink>
                                         </li>
                                     )}
-                                    <li className="nav-item">
-                                        <NavLink to="/apps/calendar" className="group">
-                                            <div className="flex items-center">
-                                                <IconMenuCalendar className="group-hover:!text-primary shrink-0" />
-                                                <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('calendar')}</span>
-                                            </div>
-                                        </NavLink>
-                                    </li>
+                                    {role === 'admin' && (
+                                        <li className="nav-item">
+                                            <NavLink to="/apps/calendar" className="group">
+                                                <div className="flex items-center">
+                                                    <IconMenuCalendar className="group-hover:!text-primary shrink-0" />
+                                                    <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('calendar')}</span>
+                                                </div>
+                                            </NavLink>
+                                        </li>
+                                    )}
+                                    {role === 'expert' && (
+                                        <li className="nav-item">
+                                            <NavLink to="/apps/userCalendar" className="group">
+                                                <div className="flex items-center">
+                                                    <IconMenuCalendar className="group-hover:!text-primary shrink-0" />
+                                                    <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('calendar')}</span>
+                                                </div>
+                                            </NavLink>
+                                        </li>
+                                    )}
                                     {role === 'user' && (
                                         <li className="nav-item">
                                             <NavLink to="/apps/ai" className="group">

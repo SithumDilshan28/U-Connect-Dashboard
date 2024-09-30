@@ -5,6 +5,8 @@ const addGoal = async (req, res) => {
   try {
     const { title, tasks } = req.body;
 
+    const id = req.user.id;
+
     // Validate input
     if (!title) {
       return res.status(400).json({ message: "Title is required" });
@@ -13,6 +15,7 @@ const addGoal = async (req, res) => {
     // Create a new goal
     const newGoal = new Goal({
       title,
+      userId: id,
       tasks, // tasks should follow the structure in TaskSchema
     });
 
@@ -34,7 +37,10 @@ const addGoal = async (req, res) => {
 // Get all goals
 const getAllGoals = async (req, res) => {
   try {
-    const goals = await Goal.find();
+    const userId = req.user.id;
+
+    const goals = await Goal.find({ userId: userId });
+
     return res.status(200).json(goals);
   } catch (error) {
     return res.status(500).json({
@@ -84,26 +90,6 @@ const updateGoal = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       message: "Error updating goal",
-      error: error.message,
-    });
-  }
-};
-
-// Delete a goal
-const deleteGoal = async (req, res) => {
-  try {
-    const deletedGoal = await Goal.findByIdAndDelete(req.params.id);
-
-    if (!deletedGoal) {
-      return res.status(404).json({ message: "Goal not found" });
-    }
-
-    return res.status(200).json({
-      message: "Goal deleted successfully",
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Error deleting goal",
       error: error.message,
     });
   }
@@ -178,6 +164,81 @@ const deleteTask = async (req, res) => {
   }
 };
 
+const updateTaskInGoal = async (req, res) => {
+  try {
+    const { goalId, taskId } = req.params; // Get goalId and taskId from URL params
+    const { title, description, date, tags } = req.body;
+
+    // Validate input
+    if (!title || !description || !date) {
+      return res
+        .status(400)
+        .json({ message: "Title, description, and date are required" });
+    }
+
+    // Find the Goal by ID
+    const goal = await Goal.findOne({ _id: goalId });
+    if (!goal) {
+      return res.status(404).json({ message: "Goal not found" });
+    }
+
+    // Find the task within the Goal's tasks array
+    const taskIndex = goal.tasks.findIndex(
+      (task) => task._id.toString() === taskId
+    );
+    if (taskIndex === -1) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    // Update the task fields
+    goal.tasks[taskIndex] = {
+      ...goal.tasks[taskIndex]._doc, // Spread existing task data
+      title: title || goal.tasks[taskIndex].title,
+      description: description || goal.tasks[taskIndex].description,
+      date: date || goal.tasks[taskIndex].date,
+      tags: tags !== undefined ? tags : goal.tasks[taskIndex].tags,
+    };
+
+    // Save the updated Goal document
+    const updatedGoal = await goal.save();
+
+    return res.status(200).json({
+      message: "Task updated successfully",
+      data: updatedGoal,
+    });
+  } catch (error) {
+    console.error("Error updating task:", error.message);
+    return res.status(500).json({
+      message: "Error updating task",
+      error: error.message,
+    });
+  }
+};
+
+const deleteGoal = async (req, res) => {
+  try {
+    const { goalId } = req.params; // Get goal ID from URL params
+
+    // Find and delete the Goal by ID
+    const deletedGoal = await Goal.findByIdAndDelete(goalId);
+
+    if (!deletedGoal) {
+      return res.status(404).json({ message: "Goal not found" });
+    }
+
+    return res.status(200).json({
+      message: "Goal deleted successfully",
+      data: deletedGoal,
+    });
+  } catch (error) {
+    console.error("Error deleting goal:", error.message);
+    return res.status(500).json({
+      message: "Error deleting goal",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   addGoal,
   getAllGoals,
@@ -186,4 +247,6 @@ module.exports = {
   deleteGoal,
   addTaskToGoal,
   deleteTask,
+  updateTaskInGoal,
+  deleteGoal,
 };

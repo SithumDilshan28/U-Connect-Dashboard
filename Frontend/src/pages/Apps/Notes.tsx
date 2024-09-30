@@ -96,11 +96,50 @@ const Notes = () => {
 
         if (params._id) {
             //update task
-            let note: any = notesList.find((d: any) => d.id === params.id);
-            note.title = params.title;
-            note.user = params.user;
-            note.description = params.description;
-            note.tag = params.tag;
+
+            const taskData = {
+                title: params.title,
+                date: params.date,
+                description: params.description,
+                tag: params.tag,
+            };
+
+            try {
+                const response = await axios
+                    .put(`http://localhost:8070/note/updateNoteDetails/${params._id}`, taskData, {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    })
+                    .then((response) => {
+                        showMessage('Note updated successfully!', 'success');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                        setAddContactModal(false);
+                    })
+                    .catch((error) => {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'error',
+                            title: error.response?.data?.error || 'Error updating note ',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
+                    });
+            } catch (error) {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: error.response?.data?.error || 'Error updating note ',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                });
+            }
         } else {
             // Prepare data to send
             const taskData = {
@@ -547,7 +586,7 @@ const Notes = () => {
                                                 <IconX />
                                             </button>
                                             <div className="text-lg font-medium bg-[#fbfbfb] dark:bg-[#121c2c] ltr:pl-5 rtl:pr-5 py-3 ltr:pr-[50px] rtl:pl-[50px]">
-                                                {params.id ? 'Edit Note' : 'Add Note'}
+                                                {params._id ? 'Edit Note' : 'Add Note'}
                                             </div>
                                             <div className="p-5">
                                                 <form>
@@ -594,7 +633,7 @@ const Notes = () => {
                                                             Cancel
                                                         </button>
                                                         <button type="button" className="btn btn-primary ltr:ml-4 rtl:mr-4" onClick={saveNote}>
-                                                            {params.id ? 'Update Note' : 'Add Note'}
+                                                            {params._id ? 'Update Note' : 'Add Note'}
                                                         </button>
                                                     </div>
                                                 </form>

@@ -7,9 +7,19 @@ import IconX from '../../components/Icon/IconX';
 import axios from 'axios';
 import IconStar from '../../components/Icon/IconStar';
 import FeedbackForm from './FeedbackForm';
+import PaymentsUser from './PaymentsUser';
 
 const UserAppointments = () => {
     const showAlert = async (type: number) => {
+        if (type === 4) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Purchase a package to get access!',
+                padding: '2em',
+                customClass: 'sweet-alerts',
+            });
+        }
+
         if (type === 2) {
             Swal.fire({
                 icon: 'success',
@@ -19,6 +29,57 @@ const UserAppointments = () => {
             });
         }
     };
+
+    const [access, setAccess] = useState(false);
+
+    const [loaded, setLoaded] = useState(false);
+
+    const token = localStorage.getItem('token');
+
+    useEffect(() => {
+        const fetchPayments = async () => {
+            try {
+                await axios
+                    .get('http://localhost:8070/payment/checkUserPayment', {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    })
+                    .then((response) => {
+                        setAccess(response.data.accessGranted);
+                        setLoaded(true);
+                    })
+                    .catch((error) => {
+                        setAccess(false);
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'error',
+                            title: error.response?.data?.error || 'Error fetching payment status',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
+                    });
+            } catch (error) {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: error.response?.data?.error || 'Error fetching payment status',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                });
+            }
+        };
+
+        fetchPayments();
+
+        if (!access && loaded) {
+            showAlert(4);
+        }
+    }, [token]);
 
     const dispatch = useDispatch();
     useEffect(() => {
@@ -44,8 +105,6 @@ const UserAppointments = () => {
 
     const [users, setUsers] = useState([]);
     const [filteredItems, setFilteredItems] = useState<any>(users);
-
-    const token = localStorage.getItem('token');
 
     // Get all users
     useEffect(() => {
@@ -215,72 +274,75 @@ const UserAppointments = () => {
 
     return (
         <div>
-            <div className="grid 2xl:grid-cols-4 xl:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-6 mt-5 w-full">
-                {filteredItems.map((expert: any) => {
-                    return (
-                        <div className="bg-white dark:bg-[#1c232f] rounded-md overflow-hidden text-center shadow relative" key={expert._id}>
-                            <div className="bg-white dark:bg-[#1c232f] rounded-md overflow-hidden text-center shadow relative">
-                                <button type="button" className="btn btn-warning btn-sm absolute right-3 top-3" onClick={() => openFeedbackModal(expert._id)}>
-                                    Give Feedback
-                                </button>
-                                <div
-                                    className="bg-white/40 rounded-t-md bg-center bg-cover p-6 pb-0 bg-"
-                                    style={{
-                                        backgroundImage: `url('/assets/images/notification-bg.png')`,
-                                        backgroundRepeat: 'no-repeat',
-                                        width: '100%',
-                                        height: '100%',
-                                    }}
-                                >
-                                    <img className="object-contain w-4/5 max-h-40 mx-auto" src={expert.profilePicture} alt="expert_image" />
-                                </div>
-
-                                <div className="px-6 pb-20 -mt-10 relative bg-transparent">
-                                    <div className="shadow-md bg-white dark:bg-gray-900 rounded-md px-2 py-4">
-                                        <div className="text-xl">
-                                            {expert.firstName} {expert.lastName}
-                                        </div>
-                                        <div className="text-white-dark">@ {expert.username}</div>
-                                        <div className="mt-6 grid grid-cols-1 gap-4 ltr:text-left rtl:text-right ml-4">
-                                            <div className="flex items-center ml-4">
-                                                <div className="flex-none text-white-dark ltr:mr-2 rtl:ml-2">Email :</div>
-                                                <div className="truncate ">{expert.email}</div>
-                                            </div>
-                                            <div className="flex items-center ml-3">
-                                                <div className="flex-none ltr:mr-2 rtl:ml-2 text-white-dark">Phone :</div>
-                                                <div>{expert.phone}</div>
-                                            </div>
-                                            <div className="flex items-center">
-                                                <div className="flex-none ltr:mr-2 rtl:ml-2 text-white-dark">Address :</div>
-                                                <div>{expert.address}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="mt-6 grid grid-cols-1 gap-4 ltr:text-left rtl:text-right">
-                                        <div className="flex items-center">
-                                            <div className="flex-none text-white-dark ltr:mr-2 rtl:ml-2 ml-10">Field :</div>
-                                            <div className="truncate">{expert.field}</div>
-                                        </div>
-                                        <div className="flex">
-                                            <div className="flex-none text-white-dark ltr:mr-2 rtl:ml-2">Description :</div>
-                                            <div className="h-auto max-h-[5.5em] overflow-y-auto">{expert.description}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="mt-1 flex gap-4 absolute bottom-0 w-full ltr:left-0 rtl:right-0 p-6">
-                                    <button type="button" className="btn bg-primary w-full text-white" onClick={() => editUser(expert)}>
-                                        Make an Appointment
+            {access === true ? (
+                <div className="grid 2xl:grid-cols-4 xl:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-6 mt-5 w-full">
+                    {filteredItems.map((expert: any) => {
+                        return (
+                            <div className="bg-white dark:bg-[#1c232f] rounded-md overflow-hidden text-center shadow relative" key={expert._id}>
+                                <div className="bg-white dark:bg-[#1c232f] rounded-md overflow-hidden text-center shadow relative">
+                                    <button type="button" className="btn btn-warning btn-sm absolute right-1 top-1 px-1" onClick={() => openFeedbackModal(expert._id)}>
+                                        Give Feedback
                                     </button>
+                                    <div
+                                        className="bg-white/40 rounded-t-md bg-center bg-cover p-6 pb-0 bg-"
+                                        style={{
+                                            backgroundImage: `url('/assets/images/notification-bg.png')`,
+                                            backgroundRepeat: 'no-repeat',
+                                            width: '100%',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <img className="object-contain w-4/5 max-h-40 mx-auto" src={expert.profilePicture} alt="expert_image" />
+                                    </div>
+
+                                    <div className="px-6 pb-20 -mt-10 relative bg-transparent">
+                                        <div className="shadow-md bg-white dark:bg-gray-900 rounded-md px-2 py-4">
+                                            <div className="text-xl">
+                                                {expert.firstName} {expert.lastName}
+                                            </div>
+                                            <div className="text-white-dark">@ {expert.username}</div>
+                                            <div className="mt-6 grid grid-cols-1 gap-4 ltr:text-left rtl:text-right ml-4">
+                                                <div className="flex items-center ml-4">
+                                                    <div className="flex-none text-white-dark ltr:mr-2 rtl:ml-2">Email :</div>
+                                                    <div className="truncate ">{expert.email}</div>
+                                                </div>
+                                                <div className="flex items-center ml-3">
+                                                    <div className="flex-none ltr:mr-2 rtl:ml-2 text-white-dark">Phone :</div>
+                                                    <div>{expert.phone}</div>
+                                                </div>
+                                                <div className="flex items-center">
+                                                    <div className="flex-none ltr:mr-2 rtl:ml-2 text-white-dark">Address :</div>
+                                                    <div>{expert.address}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="mt-6 grid grid-cols-1 gap-4 ltr:text-left rtl:text-right">
+                                            <div className="flex items-center">
+                                                <div className="flex-none text-white-dark ltr:mr-2 rtl:ml-2 ml-10">Field :</div>
+                                                <div className="truncate">{expert.field}</div>
+                                            </div>
+                                            <div className="flex">
+                                                <div className="flex-none text-white-dark ltr:mr-2 rtl:ml-2">Description :</div>
+                                                <div className="h-auto max-h-[5.5em] overflow-y-auto">{expert.description}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-1 flex gap-4 absolute bottom-0 w-full ltr:left-0 rtl:right-0 p-6">
+                                        <button type="button" className="btn bg-primary w-full text-white" onClick={() => editUser(expert)}>
+                                            Make an Appointment
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    );
-                })}
-            </div>
+                        );
+                    })}
+                </div>
+            ) : (
+                <PaymentsUser />
+            )}
 
             {/* Feedback Modal */}
             <FeedbackForm isOpen={feedbackModal} onClose={() => setFeedbackModal(false)} onSubmit={handleFeedbackSubmit} expertId={selectedExpertId} />
-
             <Transition appear show={addContactModal} as={Fragment}>
                 <Dialog as="div" open={addContactModal} onClose={() => setAddContactModal(false)} className="relative z-[51]">
                     <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">

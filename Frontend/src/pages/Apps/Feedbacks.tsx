@@ -39,7 +39,7 @@ const AITools = () => {
             {/* Grid layout for the cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {cardsData.map((card) => (
-                    <div key={card.id} className="mb-5 flex items-center justify-center">
+                    <div key={card._id} className="mb-5 flex items-center justify-center">
                         <div
                             className="max-w-[18rem] w-full bg-[#3b3f5c] shadow-[4px_6px_10px_-3px_#bfc9d4] rounded border border-white-light dark:border-[#1b2e4b] dark:bg-[#191e3a] dark:shadow-none p-5"
                             style={{ minHeight: '300px' }}

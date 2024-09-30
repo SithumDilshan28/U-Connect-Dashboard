@@ -3,23 +3,9 @@ import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { IRootState } from '../store';
 import ReactApexChart from 'react-apexcharts';
-import PerfectScrollbar from 'react-perfect-scrollbar';
-import Dropdown from '../components/Dropdown';
 import { setPageTitle } from '../store/themeConfigSlice';
-import IconHorizontalDots from '../components/Icon/IconHorizontalDots';
-import IconDollarSign from '../components/Icon/IconDollarSign';
-import IconInbox from '../components/Icon/IconInbox';
-import IconTag from '../components/Icon/IconTag';
-import IconCreditCard from '../components/Icon/IconCreditCard';
-import IconShoppingCart from '../components/Icon/IconShoppingCart';
-import IconArrowLeft from '../components/Icon/IconArrowLeft';
-import IconCashBanknotes from '../components/Icon/IconCashBanknotes';
-import IconUser from '../components/Icon/IconUser';
-import IconNetflix from '../components/Icon/IconNetflix';
-import IconBolt from '../components/Icon/IconBolt';
-import IconCaretDown from '../components/Icon/IconCaretDown';
-import IconPlus from '../components/Icon/IconPlus';
-import IconMultipleForwardRight from '../components/Icon/IconMultipleForwardRight';
+import axios from 'axios';
+import PaymentsUser from './Apps/PaymentsUser';
 
 const Index = () => {
     const dispatch = useDispatch();
@@ -31,16 +17,80 @@ const Index = () => {
 
     const [loading] = useState(false);
 
+    const [incomeData, setIncomeData] = useState<number[]>([]);
+    const [totalProfit, setTotalProfit] = useState<number>(0);
+    const [role, setRole] = useState(null);
+
+    useEffect(() => {
+        const fetchRole = async () => {
+            try {
+                // Get the Bearer token from localStorage
+
+                // Fetch the user role from the API
+                const response = await axios.get('http://localhost:8070/user/getRole', {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                setRole(response.data);
+            } catch (err) {
+                console.log('An error occurred while fetching the role.');
+            }
+        };
+
+        fetchRole();
+    }, []);
+
+    // Fetch the monthly income data
+    const fetchIncomeData = async () => {
+        try {
+            const response = await axios.get('http://localhost:8070/payment/getMonthlyPayments', {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            const data = response.data;
+
+            // Map the payments data to an array of totals for each month
+            const monthlyIncome = Array(12).fill(0); // Initialize with 12 months of 0
+            data.forEach((item: any) => {
+                monthlyIncome[item._id - 1] = item.totalIncome; // _id represents the month (1 for Jan, etc.)
+            });
+
+            return monthlyIncome;
+        } catch (error) {
+            console.error('Error fetching payment data', error);
+            return Array(12).fill(0); // Return an array of 0s in case of error
+        }
+    };
+
+    useEffect(() => {
+        const fetchRevenueData = async () => {
+            try {
+                const monthlyIncome = await fetchIncomeData();
+
+                // Calculate total income and total expenses for profit calculation
+                const totalIncome = monthlyIncome.reduce((acc, cur) => acc + cur, 0);
+
+                // Calculate total profit
+                const profit = totalIncome;
+                setTotalProfit(profit);
+
+                setIncomeData(monthlyIncome);
+            } catch (error) {
+                console.error('Error fetching data', error);
+            }
+        };
+
+        fetchRevenueData();
+    }, []);
+
     //Revenue Chart
     const revenueChart: any = {
         series: [
             {
-                name: 'Income',
-                data: [16800, 16800, 15500, 17800, 15500, 17000, 19000, 16000, 15000, 17000, 14000, 17000],
-            },
-            {
-                name: 'Expenses',
-                data: [16500, 17500, 16200, 17300, 16000, 19500, 16000, 17000, 16000, 19000, 18000, 19000],
+                name: 'Total Income',
+                data: incomeData.length > 0 ? incomeData : Array(12).fill(0), // Use the fetched income data
             },
         ],
         options: {
@@ -73,24 +123,7 @@ const Index = () => {
                 top: 22,
             },
             colors: isDark ? ['#2196F3', '#E7515A'] : ['#1B55E2', '#E7515A'],
-            markers: {
-                discrete: [
-                    {
-                        seriesIndex: 0,
-                        dataPointIndex: 6,
-                        fillColor: '#1B55E2',
-                        strokeColor: 'transparent',
-                        size: 7,
-                    },
-                    {
-                        seriesIndex: 1,
-                        dataPointIndex: 5,
-                        fillColor: '#E7515A',
-                        strokeColor: 'transparent',
-                        size: 7,
-                    },
-                ],
-            },
+
             labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
             xaxis: {
                 axisBorder: {
@@ -181,9 +214,33 @@ const Index = () => {
         },
     };
 
+    const [salesData, setSalesData] = useState<any[]>([]);
+    const token = localStorage.getItem('token');
+
+    useEffect(() => {
+        const fetchSalesData = async () => {
+            try {
+                const response = await axios.get('http://localhost:8070/payment/getTotalSalesByPackage', {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                const data = response.data;
+
+                // Map the sales data to match the series
+                const salesSeries = data.map((item: any) => item.totalSales);
+                setSalesData(salesSeries);
+            } catch (error) {
+                console.error('Error fetching sales data', error);
+            }
+        };
+
+        fetchSalesData();
+    }, []);
+
     //Sales By Category
     const salesByCategory: any = {
-        series: [985, 737, 270],
+        series: salesData.length > 0 ? salesData : [0, 0],
         options: {
             chart: {
                 type: 'donut',
@@ -236,18 +293,19 @@ const Index = () => {
                                 show: true,
                                 label: 'Total',
                                 color: '#888ea8',
-                                fontSize: '29px',
+                                fontSize: '24px',
                                 formatter: (w: any) => {
-                                    return w.globals.seriesTotals.reduce(function (a: any, b: any) {
+                                    const total = w.globals.seriesTotals.reduce(function (a: any, b: any) {
                                         return a + b;
                                     }, 0);
+                                    return `LKR ${total.toLocaleString()}`; // Adds 'LKR' in front and formats the total with commas
                                 },
                             },
                         },
                     },
                 },
             },
-            labels: ['Apparel', 'Sports', 'Others'],
+            labels: ['Regular', 'Premium'],
             states: {
                 hover: {
                     filter: {
@@ -264,6 +322,29 @@ const Index = () => {
             },
         },
     };
+
+    const [dailySalesData, setdailySalesData] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchdailySalesData = async () => {
+            try {
+                const response = await axios.get('http://localhost:8070/payment/getDailyPayments', {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                const data = response.data;
+
+                // Map the sales data to match the series
+                const salesSeries = data.map((item: any) => item.totalSales);
+                setdailySalesData(salesSeries);
+            } catch (error) {
+                console.error('Error fetching sales data', error);
+            }
+        };
+
+        fetchdailySalesData();
+    }, []);
 
     //Daily Sales
     const dailySales: any = {
@@ -403,203 +484,50 @@ const Index = () => {
 
     return (
         <div>
-            <ul className="flex space-x-2 rtl:space-x-reverse">
-                <li>
-                    <Link to="/" className="text-primary hover:underline">
-                        Dashboard
-                    </Link>
-                </li>
-                <li className="before:content-['/'] ltr:before:mr-2 rtl:before:ml-2">
-                    <span>Sales</span>
-                </li>
-            </ul>
-
-            <div className="pt-5">
-                <div className="grid xl:grid-cols-3 gap-6 mb-6">
-                    <div className="panel h-full xl:col-span-2">
-                        <div className="flex items-center justify-between dark:text-white-light mb-5">
-                            <h5 className="font-semibold text-lg">Revenue</h5>
-                            <div className="dropdown">
-                                <Dropdown
-                                    offset={[0, 1]}
-                                    placement={`${isRtl ? 'bottom-start' : 'bottom-end'}`}
-                                    button={<IconHorizontalDots className="text-black/70 dark:text-white/70 hover:!text-primary" />}
-                                >
-                                    <ul>
-                                        <li>
-                                            <button type="button">Weekly</button>
-                                        </li>
-                                        <li>
-                                            <button type="button">Monthly</button>
-                                        </li>
-                                        <li>
-                                            <button type="button">Yearly</button>
-                                        </li>
-                                    </ul>
-                                </Dropdown>
+            {role === 'admin' || role === 'expert' ? (
+                <div className="pt-5">
+                    <div className="grid xl:grid-cols-3 gap-6 mb-6">
+                        <div className="panel h-full xl:col-span-2">
+                            <div className="flex items-center justify-between dark:text-white-light mb-5">
+                                <h5 className="font-semibold text-lg">Revenue</h5>
                             </div>
-                        </div>
-                        <p className="text-lg dark:text-white-light/90">
-                            Total Profit <span className="text-primary ml-2">$10,840</span>
-                        </p>
-                        <div className="relative">
-                            <div className="bg-white dark:bg-black rounded-lg overflow-hidden">
-                                {loading ? (
-                                    <div className="min-h-[325px] grid place-content-center bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] ">
-                                        <span className="animate-spin border-2 border-black dark:border-white !border-l-transparent  rounded-full w-5 h-5 inline-flex"></span>
-                                    </div>
-                                ) : (
-                                    <ReactApexChart series={revenueChart.series} options={revenueChart.options} type="area" height={325} />
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="panel h-full">
-                        <div className="flex items-center mb-5">
-                            <h5 className="font-semibold text-lg dark:text-white-light">Sales By Category</h5>
-                        </div>
-                        <div>
-                            <div className="bg-white dark:bg-black rounded-lg overflow-hidden">
-                                {loading ? (
-                                    <div className="min-h-[325px] grid place-content-center bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] ">
-                                        <span className="animate-spin border-2 border-black dark:border-white !border-l-transparent  rounded-full w-5 h-5 inline-flex"></span>
-                                    </div>
-                                ) : (
-                                    <ReactApexChart series={salesByCategory.series} options={salesByCategory.options} type="donut" height={460} />
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
-                    <div className="panel h-full sm:col-span-2 xl:col-span-1">
-                        <div className="flex items-center mb-5">
-                            <h5 className="font-semibold text-lg dark:text-white-light">
-                                Daily Sales
-                                <span className="block text-white-dark text-sm font-normal">Go to columns for details.</span>
-                            </h5>
-                            <div className="ltr:ml-auto rtl:mr-auto relative">
-                                <div className="w-11 h-11 text-warning bg-[#ffeccb] dark:bg-warning dark:text-[#ffeccb] grid place-content-center rounded-full">
-                                    <IconDollarSign />
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <div className="bg-white dark:bg-black rounded-lg overflow-hidden">
-                                {loading ? (
-                                    <div className="min-h-[325px] grid place-content-center bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] ">
-                                        <span className="animate-spin border-2 border-black dark:border-white !border-l-transparent  rounded-full w-5 h-5 inline-flex"></span>
-                                    </div>
-                                ) : (
-                                    <ReactApexChart series={dailySales.series} options={dailySales.options} type="bar" height={160} />
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                    <div className="panel h-full">
-                        <div className="flex items-center justify-between dark:text-white-light mb-5">
-                            <h5 className="font-semibold text-lg">Summary</h5>
-                            <div className="dropdown">
-                                <Dropdown
-                                    placement={`${isRtl ? 'bottom-start' : 'bottom-end'}`}
-                                    button={<IconHorizontalDots className="w-5 h-5 text-black/70 dark:text-white/70 hover:!text-primary" />}
-                                >
-                                    <ul>
-                                        <li>
-                                            <button type="button">View Report</button>
-                                        </li>
-                                        <li>
-                                            <button type="button">Edit Report</button>
-                                        </li>
-                                        <li>
-                                            <button type="button">Mark as Done</button>
-                                        </li>
-                                    </ul>
-                                </Dropdown>
-                            </div>
-                        </div>
-                        <div className="space-y-9">
-                            <div className="flex items-center">
-                                <div className="w-9 h-9 ltr:mr-3 rtl:ml-3">
-                                    <div className="bg-secondary-light dark:bg-secondary text-secondary dark:text-secondary-light  rounded-full w-9 h-9 grid place-content-center">
-                                        <IconInbox />
-                                    </div>
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex font-semibold text-white-dark mb-2">
-                                        <h6>Income</h6>
-                                        <p className="ltr:ml-auto rtl:mr-auto">$92,600</p>
-                                    </div>
-                                    <div className="rounded-full h-2 bg-dark-light dark:bg-[#1b2e4b] shadow">
-                                        <div className="bg-gradient-to-r from-[#7579ff] to-[#b224ef] w-11/12 h-full rounded-full"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex items-center">
-                                <div className="w-9 h-9 ltr:mr-3 rtl:ml-3">
-                                    <div className="bg-success-light dark:bg-success text-success dark:text-success-light rounded-full w-9 h-9 grid place-content-center">
-                                        <IconTag />
-                                    </div>
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex font-semibold text-white-dark mb-2">
-                                        <h6>Profit</h6>
-                                        <p className="ltr:ml-auto rtl:mr-auto">$37,515</p>
-                                    </div>
-                                    <div className="w-full rounded-full h-2 bg-dark-light dark:bg-[#1b2e4b] shadow">
-                                        <div className="bg-gradient-to-r from-[#3cba92] to-[#0ba360] w-full h-full rounded-full" style={{ width: '65%' }}></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex items-center">
-                                <div className="w-9 h-9 ltr:mr-3 rtl:ml-3">
-                                    <div className="bg-warning-light dark:bg-warning text-warning dark:text-warning-light rounded-full w-9 h-9 grid place-content-center">
-                                        <IconCreditCard />
-                                    </div>
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex font-semibold text-white-dark mb-2">
-                                        <h6>Expenses</h6>
-                                        <p className="ltr:ml-auto rtl:mr-auto">$55,085</p>
-                                    </div>
-                                    <div className="w-full rounded-full h-2 bg-dark-light dark:bg-[#1b2e4b] shadow">
-                                        <div className="bg-gradient-to-r from-[#f09819] to-[#ff5858] w-full h-full rounded-full" style={{ width: '80%' }}></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="panel h-full p-0">
-                        <div className="flex items-center justify-between w-full p-5 absolute">
+                            <p className="text-lg dark:text-white-light/90">
+                                Total Profit <span className="text-primary ml-2">LKR {totalProfit.toLocaleString()}</span>
+                            </p>
                             <div className="relative">
-                                <div className="text-success dark:text-success-light bg-success-light dark:bg-success w-11 h-11 rounded-lg flex items-center justify-center">
-                                    <IconShoppingCart />
+                                <div className="bg-white dark:bg-black rounded-lg overflow-hidden">
+                                    {loading ? (
+                                        <div className="min-h-[325px] grid place-content-center bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] ">
+                                            <span className="animate-spin border-2 border-black dark:border-white !border-l-transparent  rounded-full w-5 h-5 inline-flex"></span>
+                                        </div>
+                                    ) : (
+                                        <ReactApexChart series={revenueChart.series} options={revenueChart.options} type="area" height={325} />
+                                    )}
                                 </div>
                             </div>
-                            <h5 className="font-semibold text-2xl ltr:text-right rtl:text-left dark:text-white-light">
-                                3,192
-                                <span className="block text-sm font-normal">Total Orders</span>
-                            </h5>
                         </div>
-                        <div className="bg-transparent rounded-lg overflow-hidden">
-                            {/* loader */}
-                            {loading ? (
-                                <div className="min-h-[325px] grid place-content-center bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] ">
-                                    <span className="animate-spin border-2 border-black dark:border-white !border-l-transparent  rounded-full w-5 h-5 inline-flex"></span>
+
+                        <div className="panel h-full">
+                            <div className="flex items-center mb-5">
+                                <h5 className="font-semibold text-lg dark:text-white-light">Sales By Package Category</h5>
+                            </div>
+                            <div>
+                                <div className="bg-white dark:bg-black rounded-lg overflow-hidden">
+                                    {loading ? (
+                                        <div className="min-h-[325px] grid place-content-center bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] ">
+                                            <span className="animate-spin border-2 border-black dark:border-white !border-l-transparent  rounded-full w-5 h-5 inline-flex"></span>
+                                        </div>
+                                    ) : (
+                                        <ReactApexChart series={salesByCategory.series} options={salesByCategory.options} type="donut" height={460} />
+                                    )}
                                 </div>
-                            ) : (
-                                <ReactApexChart series={totalOrders.series} options={totalOrders.options} type="area" height={290} />
-                            )}
+                            </div>
                         </div>
                     </div>
                 </div>
-               
-
-                
-            </div>
+            ) : (
+                <PaymentsUser />
+            )}
         </div>
     );
 };

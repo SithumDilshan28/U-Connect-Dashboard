@@ -264,7 +264,7 @@ const Header = () => {
                         </div>
 
                         <div className="ltr:mr-2 rtl:ml-2 ">
-                            <ul className="flex items-center space-x-2 rtl:space-x-reverse dark:text-[#d0d2d6]">
+                            {/* <ul className="flex items-center space-x-2 rtl:space-x-reverse dark:text-[#d0d2d6]">
                                 <li>
                                     <Link to="/apps/calendar" className="block p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60">
                                         <IconCalendar />
@@ -280,7 +280,7 @@ const Header = () => {
                                         <IconChatNotification />
                                     </Link>
                                 </li>
-                            </ul>
+                            </ul> */}
                         </div>
 
                         <div className="dropdown shrink-0 flex">

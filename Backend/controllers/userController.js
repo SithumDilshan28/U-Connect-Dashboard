@@ -2,6 +2,7 @@ const User = require("../models/User.model");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cloudinary = require("../cloudinaryConfig");
+const axios = require("axios");
 
 //        !!!!!!!!   IMPORTANT     !!!!!!!!!
 // GET USER ROLE
@@ -25,7 +26,7 @@ const registerUser = async (req, res) => {
   } = req.body;
 
   // Set default profile picture
-  let profilePicture = "/assets/images/profile-34.jpeg";
+  let profilePicture = "/assets/images/profile-34.png";
 
   try {
     // If profile picture is provided in the request, upload to Cloudinary
@@ -110,7 +111,7 @@ const registerExpert = async (req, res) => {
   } = req.body;
 
   // Set default profile picture
-  let profilePicture = "/assets/images/profile-34.jpeg";
+  let profilePicture = "/assets/images/profile-34.png";
 
   try {
     // If profile picture is provided in the request, upload to Cloudinary
@@ -180,7 +181,6 @@ const registerExpert = async (req, res) => {
 };
 
 //Login user
-
 const login = async (req, res) => {
   try {
     if (req.body && req.body.email && req.body.password) {
@@ -214,6 +214,64 @@ const login = async (req, res) => {
     });
   }
 };
+
+//Login user
+const googleLogin = async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    // Verify the Google token using Google API
+    const googleVerifyUrl = `https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`;
+    const googleResponse = await axios.get(googleVerifyUrl);
+
+    const { given_name, family_name, email, picture, email_verified } = googleResponse.data;
+
+    if (!email_verified) {
+      return res.status(400).json({ error: "Email not verified by Google." });
+    }
+
+    // Check if user exists in the database
+    let user = await User.findOne({ email });
+
+    // If user doesn't exist, register them
+    if (!user) {
+      // Generate a username based on email or names if needed
+      const generatedUsername = 
+        `${given_name}.${family_name}`.toLowerCase() || email.split("@")[0];
+
+      // Check if Google provided a profile picture, otherwise set a default
+      const profilePicture = picture ? picture : "/assets/images/profile-34.png";
+
+      // If the user does not exist, create a new user
+      user = new User({
+        firstName: given_name,
+        lastName: family_name,
+        email: email,
+        profilePicture: profilePicture, // Use Google picture or default
+        username: generatedUsername, // Ensure username is unique
+      });
+
+      await user.save();
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "30d",
+    });
+
+    // Send the JWT token back to the client
+    res.status(200).json({
+      message: "Login successful",
+      token,
+    });
+  } catch (error) {
+    console.error("Error in Google login:", error);
+    return res.status(500).json({
+      error: "Something went wrong during login. Please try again later.",
+    });
+  }
+};
+
 
 // Get Currently logged user
 const getCurrentUser = async (req, res) => {
@@ -263,61 +321,6 @@ const getNewToken = async (req, res) => {
       errorMessage: "Something went wrong!\n" + e,
     });
   }
-};
-
-//Get user
-const getUser = async (req, res) => {
-  const {
-    _id,
-    fullName,
-    email,
-    username,
-    password,
-    role,
-    dob,
-    designation,
-    nic,
-    etfNo,
-    epfNo,
-    address,
-    isOnline,
-    contact,
-    leaveDates,
-    creditPoints,
-    grade,
-    baseSalary,
-    totCP,
-    performance,
-    tenure,
-    ranking,
-    cv,
-  } = await User.findById(req.user.id);
-
-  res.status(200).json({
-    id: _id,
-    fullName,
-    email,
-    username,
-    password,
-    role,
-    dob,
-    designation,
-    nic,
-    etfNo,
-    epfNo,
-    address,
-    isOnline,
-    contact,
-    leaveDates,
-    creditPoints,
-    grade,
-    baseSalary,
-    totCP,
-    performance,
-    tenure,
-    ranking,
-    cv,
-  });
 };
 
 //Get one user
@@ -395,18 +398,37 @@ const deleteUser = async (req, res) => {
   }
 };
 
+//Delete Account
+const deleteAccount = async (req, res) => {
+  const id = req.user.id;
+
+  try {
+    const user = await User.findById(id);
+
+    if (!user) {
+      return res.status(404).json({
+        error: "User not found",
+      });
+    }
+
+    await User.findByIdAndDelete(id);
+
+    return res.status(200).json({
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: "Something went wrong during deletion",
+    });
+  }
+};
+
 //Update User details
 const updateUser = async (req, res) => {
-  const {
-    userId, // The ID of the user to update
-    firstName,
-    lastName,
-    phone,
-    address,
-    birthday,
-    username,
-    email,
-  } = req.body;
+  const { firstName, lastName, phone, address, birthday, username, email } =
+    req.body;
+
+  const userId = req.user.id;
 
   try {
     // Check if the user exists
@@ -546,7 +568,6 @@ module.exports = {
   registerUser,
   registerExpert,
   login,
-  getUser,
   getAllUsers,
   getAllExperts,
   deleteUser,
@@ -556,4 +577,6 @@ module.exports = {
   downProfileSummery,
   viewProfile,
   getCurrentUser,
+  deleteAccount,
+  googleLogin,
 };

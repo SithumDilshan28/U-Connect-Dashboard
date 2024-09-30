@@ -30,20 +30,27 @@ const AddPayment = () => {
         let valid = true;
         const newErrors = { cardNumber: '', holderName: '', cvv: '', expiry: '' };
 
-        if (cardNumber.length < 16) {
-            newErrors.cardNumber = 'Invalid card number';
+        // Validate card number (16 digits with dashes in the format XXXX-XXXX-XXXX-XXXX)
+        if (!/^\d{4}-\d{4}-\d{4}-\d{4}$/.test(cardNumber)) {
+            newErrors.cardNumber = 'Invalid card number. Must be in the format XXXX-XXXX-XXXX-XXXX.';
             valid = false;
         }
-        if (holderName.trim() === '') {
-            newErrors.holderName = 'Holder name is required';
+
+        // Validate holder name (must contain only letters and spaces, and should not be empty)
+        if (holderName.trim() === '' || !/^[a-zA-Z\s]+$/.test(holderName)) {
+            newErrors.holderName = 'Holder name is required and must contain only letters.';
             valid = false;
         }
-        if (cvv.length !== 3) {
-            newErrors.cvv = 'Invalid CVV';
+
+        // Validate CVV (must be exactly 3 digits)
+        if (cvv.length !== 3 || !/^\d{3}$/.test(cvv)) {
+            newErrors.cvv = 'Invalid CVV. Must be 3 digits.';
             valid = false;
         }
-        if (expiry.length !== 5 || !/^\d{2}\/\d{2}$/.test(expiry)) {
-            newErrors.expiry = 'Invalid expiry date';
+
+        // Validate expiry date (must be in MM/YY format and valid)
+        if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) {
+            newErrors.expiry = 'Invalid expiry date. Use MM/YY format.';
             valid = false;
         }
 

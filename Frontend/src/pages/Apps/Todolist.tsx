@@ -328,14 +328,51 @@ const Todolist = () => {
 
         if (params._id) {
             //update task
-            setAllTasks(
-                allTasks.map((d: any) => {
-                    if (d.id === params.id) {
-                        d = params;
-                    }
-                    return d;
-                })
-            );
+            const taskData = {
+                title: params.title,
+                date: params.date,
+                time: params.time,
+                description: params.description,
+                tag: params.tag,
+                priority: params.priority,
+            };
+
+            try {
+                const response = await axios
+                    .put(`http://localhost:8070/todo/updateTodo/${params._id}`, taskData, {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    })
+                    .then((response) => {
+                        showMessage('Task successfully updated!', 'success');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                        setAddTaskModal(false);
+                    })
+                    .catch((error) => {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'error',
+                            title: error.response?.data?.error || 'Error updating task ',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
+                    });
+            } catch (error) {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: error.response?.data?.error || 'Error updating task ',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                });
+            }
         } else {
             // Prepare data to send
             const taskData = {

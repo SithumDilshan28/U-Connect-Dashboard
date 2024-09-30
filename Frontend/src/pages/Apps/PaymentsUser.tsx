@@ -15,11 +15,11 @@ const PaymentsUser = () => {
     const [yearlyPrice, setYearlyPrice] = useState<boolean>(false);
 
     // Prices
-    const cloudHostingMonthly = 35;
-    const businessHostingMonthly = 99;
+    const cloudHostingMonthly = 3500;
+    const businessHostingMonthly = 9900;
 
-    const cloudHostingYearly = 336;
-    const businessHostingYearly = 950;
+    const cloudHostingYearly = 33600;
+    const businessHostingYearly = 95000;
 
     // Function to navigate with plan details
     const handleBuyNow = (packageType: string, amount: number, paymentMethod: string) => {
@@ -54,10 +54,8 @@ const PaymentsUser = () => {
                                 <h3 className="text-xl mb-5 font-semibold text-black dark:text-white-light">Regular Plan</h3>
 
                                 <div className="my-7 p-2.5 text-center text-lg">
-                                    <strong className="text-[#3b3f5c] dark:text-white-light text-xl lg:text-3xl text-primary">
-                                        LKR {yearlyPrice ? cloudHostingYearly.toFixed(2) : cloudHostingMonthly.toFixed(2)}
-                                    </strong>{' '}
-                                    / {yearlyPrice ? 'yearly' : 'monthly'}
+                                    <strong className="text-[#3b3f5c] dark:text-white-light text-xl lg:text-3xl text-primary">LKR {yearlyPrice ? cloudHostingYearly : cloudHostingMonthly}</strong> /{' '}
+                                    {yearlyPrice ? 'yearly' : 'monthly'}
                                 </div>
                                 <div className="mb-14">
                                     <strong className="text-black dark:text-white-light text-[15px] mb-3 inline-block">Regular Plan Features</strong>
@@ -85,7 +83,7 @@ const PaymentsUser = () => {
 
                                 <div className="my-7 p-2.5 text-center text-lg">
                                     <strong className="text-[#3b3f5c] dark:text-white-light text-xl lg:text-3xl text-primary">
-                                        LKR {yearlyPrice ? businessHostingYearly.toFixed(2) : businessHostingMonthly.toFixed(2)}
+                                        LKR {yearlyPrice ? businessHostingYearly : businessHostingMonthly}
                                     </strong>{' '}
                                     / {yearlyPrice ? 'yearly' : 'monthly'}
                                 </div>

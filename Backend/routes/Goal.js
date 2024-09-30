@@ -5,9 +5,10 @@ const {
   addGoal,
   getAllGoals,
   updateGoal,
-  deleteGoal,
   addTaskToGoal,
   deleteTask,
+  updateTaskInGoal,
+  deleteGoal,
 } = require("../controllers/goalController");
 
 //REGISTER USER
@@ -21,9 +22,10 @@ router.get("/getAllGoals", protect, getAllGoals);
 // GET ALL USERS
 router.patch("/updateGoal/:id", protect, updateGoal);
 
-// GET ALL USERS
-router.delete("/deleteGoal/:id", protect, deleteGoal);
+router.put("/updateTaskInGoal/:goalId/task/:taskId", protect, updateTaskInGoal);
 
 router.delete("/goal/:goalId/task/:taskId", deleteTask);
+
+router.delete("/deleteGoal/:goalId", deleteGoal);
 
 module.exports = router;

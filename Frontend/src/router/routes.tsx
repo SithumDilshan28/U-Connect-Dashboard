@@ -20,6 +20,7 @@ const Chat = lazy(() => import('../pages/Apps/Chat'));
 const AITools = lazy(() => import('../pages/Apps/AITools'));
 const Scrumboard = lazy(() => import('../pages/Apps/Scrumboard'));
 const Calendar = lazy(() => import('../pages/Apps/Calendar'));
+const UserCalender = lazy(() => import('../pages/Apps/UserCalendar'));
 const Preview = lazy(() => import('../pages/Apps/Invoice/Preview'));
 const Add = lazy(() => import('../pages/Apps/Invoice/Add'));
 const Edit = lazy(() => import('../pages/Apps/Invoice/Edit'));
@@ -268,6 +269,15 @@ const routes = [
             <PrivateRoute>
                 {' '}
                 <Calendar />
+            </PrivateRoute>
+        ),
+    },
+    {
+        path: '/apps/userCalendar',
+        element: (
+            <PrivateRoute>
+                {' '}
+                <UserCalender />
             </PrivateRoute>
         ),
     },

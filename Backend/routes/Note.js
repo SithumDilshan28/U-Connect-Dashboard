@@ -6,6 +6,7 @@ const {
   getAllNotes,
   updateNote,
   deleteNote,
+  updateNoteDetails,
 } = require("../controllers/noteController");
 
 //REGISTER USER
@@ -16,6 +17,8 @@ router.get("/getAllNotes", protect, getAllNotes);
 
 // GET ALL USERS
 router.patch("/updateNote/:id", protect, updateNote);
+
+router.put("/updateNoteDetails/:id", protect, updateNoteDetails);
 
 // GET ALL USERS
 router.delete("/deleteNote/:id", protect, deleteNote);
